@@ -3,6 +3,7 @@ import Menu_jeu from './Menu_jeu.jsx';
 import './App.css';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Game from './Game.jsx';
 
 function App() {
   const navigate = useNavigate();
@@ -10,8 +11,8 @@ function App() {
   return (
     <div>
       <h1>Menu jeu</h1>
-      <button onClick={() => navigate('/Jeu')}>Jouer</button>
-      <button onClick={() => navigate('/')}>Hight score</button>
+      <button onClick={() => navigate('/')}>Play</button>
+      <button onClick={() => navigate('/Jeu')}>Hightscore</button>
     </div>
   );
 }
@@ -19,7 +20,7 @@ function App() {
 function Main() {
   return (
     <Routes>
-      <Route path="/" element={<Menu_jeu />} />  
+      <Route path="/" element={<Game />} />  
       <Route path="/Jeu" element={<App />} />    
     </Routes>
   );
