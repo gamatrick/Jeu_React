@@ -1,30 +1,16 @@
 import { Routes, Route } from 'react-router-dom';
 import Menu_jeu from './Menu_jeu.jsx';
-import './App.css';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Game from './Game.jsx';
-
-function App() {
-  const navigate = useNavigate();
-
-  return (
-    <div>
-      <h1>Menu jeu</h1>
-      <button onClick={() => navigate('/')}>Play</button>
-      <button onClick={() => navigate('/Jeu')}>Hightscore</button>
-    </div>
-  );
-}
+import './App.css';
 
 function Main() {
   return (
     <Routes>
-      <Route path="/" element={<Game />} />  
-      <Route path="/Jeu" element={<App />} />    
+      <Route path="/" element={<Menu_jeu />} />  
+      <Route path="/jeu" element={<Game />} />    
     </Routes>
   );
 }
 
-export default App;
+export default Main;
 export { Main };
