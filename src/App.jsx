@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { Routes, Route } from 'react-router-dom';
+import Menu_jeu from './menu_jeu.jsx';
+import Jeu from './Jeu.jsx';
 import './App.css'
+import { useState } from 'react';
 
 function App() {
   const [count, setCount] = useState(0)
@@ -9,12 +10,6 @@ function App() {
   return (
     <>
       <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
       </div>
       <h1>Vite + React</h1>
       <div className="card">
@@ -32,4 +27,16 @@ function App() {
   )
 }
 
+function Main() {
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<Menu_jeu />} />
+        <Route path="/Jeu" element={<App/>} />
+      </Routes>
+    </>
+  )
+}
+
 export default App
+export { Main }
