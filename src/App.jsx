@@ -1,4 +1,5 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import HighScores from './HighScores.jsx';
 import Menu_jeu from './Menu_jeu.jsx';
 import UsernameSelection from './UsernameSelection.jsx';
 import Game from './Game.jsx';
@@ -14,5 +15,5 @@ function Main() {
   );
 }
 
+
 export default Main;
-export { Main };

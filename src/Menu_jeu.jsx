@@ -19,7 +19,7 @@ export default function Menu_jeu() {
           </button>
           
           <button 
-            onClick={() => alert('High scores à venir !')}
+            onClick={() => navigate('/highscores')}
             className="px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white text-xl font-semibold rounded-lg transition-colors shadow-lg"
           >
             🏆 High Scores
