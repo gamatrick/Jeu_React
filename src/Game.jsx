@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Grid from './Grid';
+import { startChrono, stopChrono } from './HighScores';
 
 const API_URL = 'http://localhost:4000/api';
 
@@ -8,6 +9,8 @@ function Game() {
   const [loading, setLoading] = useState(true);
   const [revealed, setRevealed] = useState({});
   const [playerPos, setPlayerPos] = useState(null);
+  const [time, setTime] = useState(0);
+
 
   useEffect(() => {
     fetch(`${API_URL}/levels/1`)
@@ -30,6 +33,7 @@ function Game() {
         setPlayerPos(data.start);
 
         setLoading(false);
+        startChrono();
       })
       .catch(err => {
         console.error('Erreur API:', err);
@@ -60,7 +64,11 @@ function Game() {
 
       if (targetCell === 'E') {
         setTimeout(() => {
-          alert("ez");
+          alert("ez ", time);
+          const time = stopChrono();
+          setTime(time);
+          stopChrono();
+          console.log("Chrono arrêté à :", time, "s");
         }, 100);
       }
     }
@@ -104,9 +112,11 @@ function Game() {
             onMove={handleMove}
           />
         </div>
+        Temps : {time} 
       </div>
     </>
   );
 }
+
 
 export default Game;
