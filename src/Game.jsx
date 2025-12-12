@@ -67,21 +67,8 @@ function Game() {
           alert("ez ", time);
           const time = stopChrono();
           setTime(time);
-          // Sauvegarder le temps
-          fetch("http://localhost:4000/api/times", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              player: "Joueur1",
-              levelId: level.id,
-              time: time
-            }),
-          })
-          .then(res => res.json())
-          .then(data => {
-            console.log("Temps sauvegardé :", data);
-            alert(`Niveau terminé en ${time} secondes !`);
-          });
+          stopChrono();
+          console.log("Chrono arrêté à :", time, "s");
         }, 100);
       }
     }
