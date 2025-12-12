@@ -37,4 +37,6 @@ export function stopChrono() {
 }
 
 
+
+
 export default HighScores;
