@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Grid from './Grid';
 import { useNavigate } from 'react-router-dom';
+import { stopChrono, startChrono } from './HighScores';
 
 const API_URL = 'http://localhost:4000/api';
 
@@ -16,6 +17,7 @@ function Game() {
     const [clearedObstacles, setClearedObstacles] = useState([]);
     const [username, setUsername] = useState('');
     const navigate = useNavigate();
+    const [time, setTime] = useState(0);
 
     useEffect(() => {
         // Vérifier si l'utilisateur a un pseudo
@@ -39,6 +41,7 @@ function Game() {
         setInventory([]);
         setDefeatedEnemies([]);
         setClearedObstacles([]);
+        startChrono();
 
         fetch(`${API_URL}/levels/${levelId}`)
             .then(res => res.json())
@@ -164,6 +167,7 @@ function Game() {
 
             if (cellInfo.type === 'E') {
                 setIsComplete(true);
+                stopChrono();
                 console.log(`Niveau ${currentLevelId} terminé !`);
 
                 setTimeout(() => {
@@ -283,6 +287,7 @@ function Game() {
                         />
                     </div>
                 </div>
+                Time : {time}
             </div>
         </>
     );

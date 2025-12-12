@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
+import { stopChrono } from './HighScores';
 
 export default function Menu_jeu() {
   const navigate = useNavigate();
-  
+  stopChrono();
+
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6">
       <div className="text-center space-y-8">

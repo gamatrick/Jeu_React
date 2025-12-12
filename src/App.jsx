@@ -10,10 +10,12 @@ function Main() {
     <Routes>
       <Route path="/" element={<Menu_jeu />} />
       <Route path="/username" element={<UsernameSelection />} />
-      <Route path="/jeu" element={<Game />} />    
+      <Route path="/jeu" element={<Game />} /> 
+      <Route path="/highscores" element={<HighScores />} />   
     </Routes>
   );
 }
 
 
 export default Main;
+export { Main }
