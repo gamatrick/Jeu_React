@@ -65,7 +65,8 @@ function Game() {
       if (targetCell === 'E') {
         setTimeout(() => {
           alert("ez ", time);
-          stopChrono();
+          const time = stopChrono();
+          setTime(time);
           // Sauvegarder le temps
           fetch("http://localhost:4000/api/times", {
             method: "POST",

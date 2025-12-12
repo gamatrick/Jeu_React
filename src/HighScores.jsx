@@ -33,6 +33,7 @@ export function stopChrono() {
     clearInterval(timer);
     timer = null;
     console.log("Chrono arrêté à :", time, "s");
+    return time
 }
 
 
