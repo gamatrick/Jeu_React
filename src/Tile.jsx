@@ -1,6 +1,6 @@
 import React from 'react';
 
-function Tile({ cell, isRevealed, hasPlayer, onClick, isDefeated, isCleared, hasKey, tileSize = 64 }) {
+function Tile({ cell, isRevealed, hasPlayer, onClick, isDefeated, isCleared, hasKey, tileSize = 64, isBlocked, enemyColor }) {
     const getCellInfo = () => {
         if (!cell) return { type: 'empty' };
 
@@ -28,6 +28,11 @@ function Tile({ cell, isRevealed, hasPlayer, onClick, isDefeated, isCleared, has
     const getBackground = () => {
         if (!isRevealed) return '#6b7280';
 
+        // Si l'ennemi est bloqué (pas la bonne arme), case rouge
+        if (isBlocked && cellInfo.type === 'enemy') {
+            return '#991b1b'; // Rouge foncé
+        }
+
         switch (cellInfo.type) {
             case 'S':
             case 'C':
@@ -53,6 +58,22 @@ function Tile({ cell, isRevealed, hasPlayer, onClick, isDefeated, isCleared, has
     const getIcon = () => {
         if (!isRevealed) return null;
 
+        // Si l'ennemi est bloqué, afficher un rond de couleur
+        if (isBlocked && cellInfo.type === 'enemy' && enemyColor) {
+            return (
+                <div 
+                    style={{
+                        width: `${tileSize * 0.6}px`,
+                        height: `${tileSize * 0.6}px`,
+                        backgroundColor: enemyColor,
+                        borderRadius: '50%',
+                        border: '3px solid white',
+                        boxShadow: '0 0 10px rgba(0,0,0,0.5)'
+                    }}
+                />
+            );
+        }
+
         switch (cellInfo.type) {
             case 'enemy':
                 if (isDefeated) return null;
@@ -65,7 +86,7 @@ function Tile({ cell, isRevealed, hasPlayer, onClick, isDefeated, isCleared, has
                 return obstacleIcons[cellInfo.obstacleType] || '🚧';
 
             case 'door':
-                if (hasKey) return '🚪✓';
+                if (hasKey) return '🚪✔';
                 return cellInfo.doorColor === 'red' ? '🔴🚪' : '🔵🚪';
 
             case 'key':
@@ -77,9 +98,12 @@ function Tile({ cell, isRevealed, hasPlayer, onClick, isDefeated, isCleared, has
                 const itemIcons = {
                     water_bucket: '🪣',
                     pickaxe: '⛏️',
-                    swim_boots: '🥾'
+                    swim_boots: '🥾',
+                    dagger: '🗡️',
+                    sword: '⚔️',
+                    axe: '🪓'
                 };
-                return itemIcons[cellInfo.itemId] || '🎒';
+                return itemIcons[cellInfo.itemId] || '🎁';
 
             case 'E':
                 return '🏆';

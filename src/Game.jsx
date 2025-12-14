@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Grid from './Grid';
+import Toast from './Toast';
 import { useNavigate } from 'react-router-dom';
 
 const API_URL = 'http://localhost:4000/api';
+const TIME_PENALTY = 10; // Pénalité de 10 secondes si on essaie de combattre sans arme
 
 function Game() {
     const [currentLevelId, setCurrentLevelId] = useState(1);
@@ -14,12 +16,21 @@ function Game() {
     const [inventory, setInventory] = useState([]);
     const [defeatedEnemies, setDefeatedEnemies] = useState([]);
     const [clearedObstacles, setClearedObstacles] = useState([]);
+    const [blockedEnemies, setBlockedEnemies] = useState([]);
     const [username, setUsername] = useState('');
     const [timer, setTimer] = useState(0);
     const [hasStarted, setHasStarted] = useState(false);
     const [moveCount, setMoveCount] = useState(0);
+    const [weaponsCatalog, setWeaponsCatalog] = useState([]);
     const navigate = useNavigate();
     const timerIntervalRef = useRef(null);
+
+    // État pour les toasts
+    const [toast, setToast] = useState({
+        isVisible: false,
+        message: '',
+        type: 'info'
+    });
 
     useEffect(() => {
         const savedUsername = localStorage.getItem('playerUsername');
@@ -29,6 +40,14 @@ function Game() {
         }
         setUsername(savedUsername);
     }, [navigate]);
+
+    useEffect(() => {
+        // Charger le catalogue des armes
+        fetch(`${API_URL}/weapons`)
+            .then(res => res.json())
+            .then(data => setWeaponsCatalog(data))
+            .catch(err => console.error('Erreur chargement armes:', err));
+    }, []);
 
     useEffect(() => {
         if (username) {
@@ -92,7 +111,6 @@ function Game() {
                 e.preventDefault();
             }
 
-            // Vérifier si la position a changé et si elle est valide
             if ((newRow !== playerPos.row || newCol !== playerPos.col) &&
                 newRow >= 0 && newRow < level.rows &&
                 newCol >= 0 && newCol < level.cols) {
@@ -110,6 +128,7 @@ function Game() {
         setInventory([]);
         setDefeatedEnemies([]);
         setClearedObstacles([]);
+        setBlockedEnemies([]);
 
         fetch(`${API_URL}/levels/${levelId}`)
             .then(res => res.json())
@@ -156,9 +175,70 @@ function Game() {
         }
     };
 
+    const showToast = (message, type = 'info') => {
+        setToast({
+            isVisible: true,
+            message,
+            type
+        });
+    };
+
+    const closeToast = () => {
+        setToast({
+            isVisible: false,
+            message: '',
+            type: 'info'
+        });
+    };
+
+    const canDefeatEnemy = (enemyType) => {
+        console.log('=== canDefeatEnemy Debug ===');
+        console.log('Enemy type:', enemyType);
+        console.log('Inventory:', inventory);
+        console.log('Weapons catalog:', weaponsCatalog);
+        
+        // Vérifier si le catalogue des armes est chargé
+        if (weaponsCatalog.length === 0) {
+            console.warn('Weapons catalog is empty!');
+            return false;
+        }
+        
+        const weapons = inventory.filter(item => {
+            const weapon = weaponsCatalog.find(w => w.id === item);
+            return weapon !== undefined;
+        });
+
+        console.log('Weapons in inventory:', weapons);
+
+        for (const weaponId of weapons) {
+            const weapon = weaponsCatalog.find(w => w.id === weaponId);
+            console.log('Checking weapon:', weapon);
+            if (weapon && weapon.canDefeat && weapon.canDefeat.includes(enemyType)) {
+                console.log('✅ Can defeat with', weapon.name);
+                return true;
+            }
+        }
+
+        console.log('❌ Cannot defeat');
+        return false;
+    };
+
+    const confirmCombat = () => {
+        if (!pendingCombat) return;
+
+        setDefeatedEnemies(prev => [...prev, pendingCombat.key]);
+        setBlockedEnemies(prev => prev.filter(key => key !== pendingCombat.key));
+        setPlayerPos({ row: pendingCombat.row, col: pendingCombat.col });
+        setPendingCombat(null);
+        showToast('Victoire ! Ennemi vaincu !', 'success');
+    };
+
+    const cancelCombat = () => {
+        setPendingCombat(null);
+    };
+
     const saveScore = (finalTime) => {
         try {
-            // Récupérer les scores existants depuis localStorage
             const existingScores = JSON.parse(localStorage.getItem('highscores') || '[]');
             
             const newScore = {
@@ -170,8 +250,6 @@ function Game() {
             };
             
             existingScores.push(newScore);
-            
-            // Trier par meilleur temps et garder seulement les 20 meilleurs
             existingScores.sort((a, b) => a.score - b.score);
             const topScores = existingScores.slice(0, 20);
             
@@ -198,12 +276,10 @@ function Game() {
 
             setRevealed(prev => ({ ...prev, [targetKey]: true }));
 
-            // Démarrer le chrono au premier mouvement
             if (!hasStarted) {
                 setHasStarted(true);
             }
 
-            // Incrémenter le compteur de mouvements et ajouter 1 seconde
             setMoveCount(prev => prev + 1);
             setTimer(prev => prev + 1);
 
@@ -214,7 +290,7 @@ function Game() {
                 case 'door': {
                     const hasKey = inventory.includes(`key_${cellInfo.doorColor}`);
                     if (!hasKey) {
-                        alert(`🚪 Porte ${cellInfo.doorColor} verrouillée ! Trouvez la clé ${cellInfo.doorColor}.`);
+                        showToast(`🚪 Porte ${cellInfo.doorColor} verrouillée ! Trouvez la clé.`, 'warning');
                         return;
                     }
                     break;
@@ -223,12 +299,18 @@ function Game() {
                 case 'enemy':
                     if (!defeatedEnemies.includes(targetKey)) {
                         const enemy = level.enemies.find(e => e.type === cellInfo.enemyType);
-                        const confirmed = window.confirm(`⚔️ Combat contre ${enemy?.name || 'un ennemi'} (HP: ${enemy?.hp}, ATK: ${enemy?.attack}) !`);
-                        if (confirmed) {
-                            setDefeatedEnemies(prev => [...prev, targetKey]);
-                        } else {
+                        
+                        if (!canDefeatEnemy(cellInfo.enemyType)) {
+                            setBlockedEnemies(prev => [...prev, targetKey]);
+                            setTimer(prev => prev + TIME_PENALTY);
+                            showToast(`⚔️ Arme insuffisante ! +${TIME_PENALTY}s de pénalité`, 'error');
                             return;
                         }
+
+                        // A la bonne arme - vaincre automatiquement l'ennemi
+                        setDefeatedEnemies(prev => [...prev, targetKey]);
+                        setBlockedEnemies(prev => prev.filter(key => key !== targetKey));
+                        showToast(`⚔️ ${enemy?.name} vaincu !`, 'success');
                     }
                     break;
 
@@ -237,7 +319,7 @@ function Game() {
                         const obstacle = level.obstacles.find(o => o.type === cellInfo.obstacleType);
                         const hasItem = inventory.includes(obstacle?.requiredItem);
                         if (!hasItem) {
-                            alert(`🚧 ${obstacle?.name || 'Obstacle'} ! Vous avez besoin de : ${obstacle?.requiredItem}`);
+                            showToast(`🚧 ${obstacle?.name} ! Besoin de : ${obstacle?.requiredItem}`, 'warning');
                             return;
                         }
                         setClearedObstacles(prev => [...prev, targetKey]);
@@ -248,6 +330,7 @@ function Game() {
                     const keyId = `key_${cellInfo.keyColor}`;
                     if (!inventory.includes(keyId)) {
                         setInventory(prev => [...prev, keyId]);
+                        showToast(`🔑 Clé ${cellInfo.keyColor} récupérée !`, 'success');
                     }
                     break;
                 }
@@ -255,7 +338,8 @@ function Game() {
                 case 'item':
                     if (!inventory.includes(cellInfo.itemId)) {
                         setInventory(prev => [...prev, cellInfo.itemId]);
-                        const item = level.items.find(i => i.id === cellInfo.itemId);
+                        const item = level.items?.find(i => i.id === cellInfo.itemId);
+                        showToast(`${item?.icon || '📦'} ${item?.name || cellInfo.itemId} récupéré !`, 'success');
                     }
                     break;
             }
@@ -267,19 +351,17 @@ function Game() {
 
                 const nextLevel = currentLevelId + 1;
                 if (nextLevel <= 4) {
+                    showToast('✅ Niveau terminé !', 'success');
                     setTimeout(() => {
                         setCurrentLevelId(nextLevel);
                         setIsComplete(false);
                     }, 2000);
                 } else {
-                    // Dernier niveau terminé - sauvegarder le score
-                    const finalTime = timer + 1; // +1 pour le dernier mouvement
+                    const finalTime = timer + 1;
                     saveScore(finalTime);
                     
-                    setTimeout(() => {
-                        alert(`🎉 Félicitations ${username} !\nVous avez terminé tous les niveaux en ${Math.floor(finalTime / 60)}:${(finalTime % 60).toString().padStart(2, '0')} !\nMovements: ${moveCount + 1}\n\nLe score a été sauvegardé !`);
-                        navigate('/highscores');
-                    }, 1000);
+                    showToast('🎉 Tous les niveaux terminés !', 'success');
+                    setTimeout(() => navigate('/highscores'), 3000);
                 }
             }
         }
@@ -293,132 +375,124 @@ function Game() {
 
     if (loading) {
         return (
-            <>
-                <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
-                    <p className="text-2xl">Chargement du niveau {currentLevelId}...</p>
-                </div>
-            </>
+            <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
+                <p className="text-2xl">Chargement du niveau {currentLevelId}...</p>
+            </div>
         );
     }
 
     if (!level) {
         return (
-            <>
-                <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
-                    <div className="text-center">
-                        <p className="text-2xl mb-4">❌ Erreur de chargement</p>
-                        <p className="text-sm">Vérifiez que l'API tourne sur le bon port</p>
-                        <button
-                            onClick={() => navigate('/')}
-                            className="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
-                        >
-                            Retour au menu
-                        </button>
-                    </div>
+            <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
+                <div className="text-center">
+                    <p className="text-2xl mb-4">❌ Erreur de chargement</p>
+                    <p className="text-sm">Vérifiez que l'API tourne sur le bon port</p>
+                    <button
+                        onClick={() => navigate('/')}
+                        className="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+                    >
+                        Retour au menu
+                    </button>
                 </div>
-            </>
+            </div>
         );
     }
 
     return (
-        <>
-            <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6">
-                <div className="w-full max-w-7xl">
-                    <div className="flex items-center justify-between mb-6">
-                        <button
-                            onClick={() => navigate('/')}
-                            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-                        >
-                            ← Retour
-                        </button>
+        <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6">
+            <div className="w-full max-w-7xl">
+                <div className="flex items-center justify-between mb-4">
+                    <button
+                        onClick={() => navigate('/')}
+                        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                    >
+                        ← Retour
+                    </button>
 
-                        <div className="flex-1 text-center">
-                            <h1 className="text-3xl md:text-5xl font-bold text-white tracking-wider">
-                                Level {level.id} - {level.name}
-                            </h1>
-                            <p className="text-blue-400 text-lg mt-2">
-                                👤 {username}
-                            </p>
-                            <p className="text-gray-400 text-sm mt-1">
-                                ⌨️ Utilisez les flèches ou ZQSD pour vous déplacer
-                            </p>
-                        </div>
-
-                        <div className="w-24"></div>
+                    <div className="flex-1 text-center">
+                        <h1 className="text-2xl md:text-4xl font-bold text-white">
+                            Niveau {level.id} - {level.name} | 👤 {username}
+                        </h1>
                     </div>
 
-                    {/* Chronomètre et compteur de mouvements */}
-                    <div className="bg-gradient-to-r from-blue-900 to-purple-900 text-white px-8 py-4 rounded-xl shadow-lg mb-6 border-2 border-blue-500">
-                        <div className="flex items-center justify-center gap-8">
-                            <div className="text-center">
-                                <p className="text-sm text-gray-300 mb-1">Temps</p>
-                                <p className="text-3xl font-bold font-mono">
-                                    ⏱️ {formatTime(timer)}
-                                </p>
-                            </div>
-                            <div className="w-px h-12 bg-gray-500"></div>
-                            <div className="text-center">
-                                <p className="text-sm text-gray-300 mb-1">Mouvements</p>
-                                <p className="text-3xl font-bold">
-                                    🚶 {moveCount}
-                                </p>
-                            </div>
-                        </div>
+                    <div className="w-24"></div>
+                </div>
+
+                <div className="flex items-center justify-center gap-6 mb-4">
+                    <div className="bg-blue-900 text-white px-4 py-2 rounded-lg border-2 border-blue-500">
+                        <span className="font-bold">⏱️ {formatTime(timer)}</span>
                     </div>
-
-                    {isComplete && (
-                        <div className="bg-green-600 text-white px-6 py-3 rounded-lg text-xl font-bold animate-pulse mb-6 text-center">
-                            ✅ Niveau terminé ! {currentLevelId < 4 ? 'Niveau suivant dans 2 secondes...' : 'Calcul du score final...'}
-                        </div>
-                    )}
-
-                    {inventory.length > 0 && (
-                        <div className="bg-gradient-to-r from-purple-900 to-indigo-900 text-white px-8 py-4 rounded-xl shadow-lg mb-6 border-2 border-purple-500">
-                            <div className="flex items-center justify-center flex-wrap gap-3">
-                                <span className="font-bold text-lg mr-2">🎒 Inventaire :</span>
-                                {inventory.map((item, idx) => {
-                                    const itemIcons = {
-                                        'key_red': '🔴',
-                                        'key_blue': '🔵',
-                                        'water_bucket': '🪣',
-                                        'pickaxe': '⛏️',
-                                        'swim_boots': '🥾'
-                                    };
-                                    const icon = itemIcons[item] || '📦';
-                                    const displayName = item.replace('key_', 'Clé ').replace('_', ' ');
-
-                                    return (
-                                        <div
-                                            key={idx}
-                                            className="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg border-2 border-purple-400 shadow-md transform hover:scale-105 transition-all flex items-center gap-2"
-                                        >
-                                            <span className="text-2xl">{icon}</span>
-                                            <span className="text-sm font-medium capitalize">{displayName}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="text-white text-sm mb-4 text-center">
-                        {level.rows}×{level.cols} - {level.difficulty}
-                    </div>
-
-                    <div className="flex justify-center">
-                        <Grid
-                            level={level}
-                            revealed={revealed}
-                            playerPos={playerPos}
-                            onMove={handleMove}
-                            defeatedEnemies={defeatedEnemies}
-                            clearedObstacles={clearedObstacles}
-                            inventory={inventory}
-                        />
+                    <div className="bg-purple-900 text-white px-4 py-2 rounded-lg border-2 border-purple-500">
+                        <span className="font-bold">🚶 {moveCount}</span>
                     </div>
                 </div>
+
+                {inventory.length > 0 && (
+                    <div className="bg-gradient-to-r from-purple-900 to-indigo-900 text-white px-6 py-3 rounded-xl shadow-lg mb-4 border-2 border-purple-500">
+                        <div className="flex items-center justify-center flex-wrap gap-3">
+                            <span className="font-bold text-lg mr-2">🎒 Inventaire :</span>
+                            {inventory.map((item, idx) => {
+                                const itemIcons = {
+                                    'key_red': '🔴',
+                                    'key_blue': '🔵',
+                                    'water_bucket': '🪣',
+                                    'pickaxe': '⛏️',
+                                    'swim_boots': '🥾',
+                                    'dagger': '🗡️',
+                                    'sword': '⚔️',
+                                    'axe': '🪓'
+                                };
+                                const itemNames = {
+                                    'key_red': 'Clé rouge',
+                                    'key_blue': 'Clé bleue',
+                                    'water_bucket': 'Seau d\'eau',
+                                    'pickaxe': 'Pioche',
+                                    'swim_boots': 'Bottes',
+                                    'dagger': 'Dague',
+                                    'sword': 'Épée',
+                                    'axe': 'Hache'
+                                };
+                                const icon = itemIcons[item] || '📦';
+                                const name = itemNames[item] || item;
+
+                                return (
+                                    <div
+                                        key={idx}
+                                        className="bg-gray-800 hover:bg-gray-700 px-3 py-2 rounded-lg border-2 border-purple-400 shadow-md transform hover:scale-105 transition-all flex items-center gap-2"
+                                    >
+                                        <span className="text-xl">{icon}</span>
+                                        <span className="text-sm font-medium">{name}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* Toast de notification */}
+                <div className="flex justify-center mb-4 min-h-[60px]">
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        isVisible={toast.isVisible}
+                        onClose={closeToast}
+                    />
+                </div>
+
+                <div className="flex justify-center">
+                    <Grid
+                        level={level}
+                        revealed={revealed}
+                        playerPos={playerPos}
+                        onMove={handleMove}
+                        defeatedEnemies={defeatedEnemies}
+                        clearedObstacles={clearedObstacles}
+                        blockedEnemies={blockedEnemies}
+                        inventory={inventory}
+                    />
+                </div>
             </div>
-        </>
+        </div>
     );
 }
 
