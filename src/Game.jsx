@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Grid from './Grid';
 import Toast from './Toast';
+import HPBar from './Hpbar';
+import GameOver from './GameOver';
 import { useNavigate } from 'react-router-dom';
+import { canFightEnemy, simulateCombat, getCombatMessage } from './combatSystem';
 
 const API_URL = 'http://localhost:4000/api';
-const TIME_PENALTY = 10; // Pénalité de 10 secondes si on essaie de combattre sans arme
+const MAX_HP = 100; // HP maximum du joueur
+const STARTING_HP = 100; // HP de départ
 
 function Game() {
     const [currentLevelId, setCurrentLevelId] = useState(1);
@@ -22,6 +26,8 @@ function Game() {
     const [hasStarted, setHasStarted] = useState(false);
     const [moveCount, setMoveCount] = useState(0);
     const [weaponsCatalog, setWeaponsCatalog] = useState([]);
+    const [playerHP, setPlayerHP] = useState(STARTING_HP);
+    const [isGameOver, setIsGameOver] = useState(false);
     const navigate = useNavigate();
     const timerIntervalRef = useRef(null);
 
@@ -57,7 +63,7 @@ function Game() {
 
     // Gestion du chronomètre
     useEffect(() => {
-        if (hasStarted && !isComplete) {
+        if (hasStarted && !isComplete && !isGameOver) {
             timerIntervalRef.current = setInterval(() => {
                 setTimer(prev => prev + 1);
             }, 1000);
@@ -72,12 +78,12 @@ function Game() {
                 clearInterval(timerIntervalRef.current);
             }
         };
-    }, [hasStarted, isComplete]);
+    }, [hasStarted, isComplete, isGameOver]);
 
     // Gestion des touches clavier
     useEffect(() => {
         const handleKeyPress = (e) => {
-            if (!playerPos || isComplete || !level) return;
+            if (!playerPos || isComplete || !level || isGameOver) return;
 
             let newRow = playerPos.row;
             let newCol = playerPos.col;
@@ -120,8 +126,11 @@ function Game() {
 
         window.addEventListener('keydown', handleKeyPress);
         return () => window.removeEventListener('keydown', handleKeyPress);
-    }, [playerPos, isComplete, level]);
+    }, [playerPos, isComplete, level, isGameOver]);
 
+    /**
+     * Charge un niveau depuis l'API
+     */
     const loadLevel = (levelId) => {
         setLoading(true);
         setIsComplete(false);
@@ -153,6 +162,9 @@ function Game() {
             });
     };
 
+    /**
+     * Récupère les informations d'une cellule
+     */
     const getCellType = (cellValue) => {
         if (!cellValue) return { type: 'empty' };
 
@@ -175,6 +187,9 @@ function Game() {
         }
     };
 
+    /**
+     * Affiche un toast temporaire
+     */
     const showToast = (message, type = 'info') => {
         setToast({
             isVisible: true,
@@ -183,6 +198,9 @@ function Game() {
         });
     };
 
+    /**
+     * Ferme le toast
+     */
     const closeToast = () => {
         setToast({
             isVisible: false,
@@ -191,78 +209,53 @@ function Game() {
         });
     };
 
-    const canDefeatEnemy = (enemyType) => {
-        console.log('=== canDefeatEnemy Debug ===');
-        console.log('Enemy type:', enemyType);
-        console.log('Inventory:', inventory);
-        console.log('Weapons catalog:', weaponsCatalog);
-        
-        // Vérifier si le catalogue des armes est chargé
-        if (weaponsCatalog.length === 0) {
-            console.warn('Weapons catalog is empty!');
-            return false;
-        }
-        
-        const weapons = inventory.filter(item => {
-            const weapon = weaponsCatalog.find(w => w.id === item);
-            return weapon !== undefined;
-        });
+    /**
+     * Fait perdre des HP au joueur
+     */
+    const takeDamage = (damage) => {
+        const newHP = Math.max(0, playerHP - damage);
+        setPlayerHP(newHP);
 
-        console.log('Weapons in inventory:', weapons);
-
-        for (const weaponId of weapons) {
-            const weapon = weaponsCatalog.find(w => w.id === weaponId);
-            console.log('Checking weapon:', weapon);
-            if (weapon && weapon.canDefeat && weapon.canDefeat.includes(enemyType)) {
-                console.log('✅ Can defeat with', weapon.name);
-                return true;
-            }
+        if (newHP <= 0) {
+            setIsGameOver(true);
         }
 
-        console.log('❌ Cannot defeat');
-        return false;
+        return newHP;
     };
 
-    const confirmCombat = () => {
-        if (!pendingCombat) return;
-
-        setDefeatedEnemies(prev => [...prev, pendingCombat.key]);
-        setBlockedEnemies(prev => prev.filter(key => key !== pendingCombat.key));
-        setPlayerPos({ row: pendingCombat.row, col: pendingCombat.col });
-        setPendingCombat(null);
-        showToast('Victoire ! Ennemi vaincu !', 'success');
-    };
-
-    const cancelCombat = () => {
-        setPendingCombat(null);
-    };
-
+    /**
+     * Sauvegarde le score du joueur
+     */
     const saveScore = (finalTime) => {
         try {
             const existingScores = JSON.parse(localStorage.getItem('highscores') || '[]');
-            
+
             const newScore = {
                 id: existingScores.length ? Math.max(...existingScores.map(s => s.id)) + 1 : 1,
                 playerName: username,
                 score: finalTime,
                 moveCount: moveCount + 1,
+                finalHP: playerHP,
                 createdAt: new Date().toISOString()
             };
-            
+
             existingScores.push(newScore);
-            existingScores.sort((a, b) => a.score - b.score);
-            const topScores = existingScores.slice(0, 20);
-            
+            // Ne plus trier ici, le tri se fait dans Highscores.jsx par score final
+            const topScores = existingScores.slice(-20); // Garder les 20 derniers
+
             localStorage.setItem('highscores', JSON.stringify(topScores));
-            
+
             console.log('Score sauvegardé avec succès');
         } catch (error) {
             console.error('Erreur lors de la sauvegarde du score:', error);
         }
     };
 
+    /**
+     * Gère le déplacement du joueur
+     */
     const handleMove = (targetRow, targetCol) => {
-        if (!level || !playerPos || isComplete) return;
+        if (!level || !playerPos || isComplete || isGameOver) return;
 
         const { row: currentRow, col: currentCol } = playerPos;
 
@@ -290,7 +283,7 @@ function Game() {
                 case 'door': {
                     const hasKey = inventory.includes(`key_${cellInfo.doorColor}`);
                     if (!hasKey) {
-                        showToast(`🚪 Porte ${cellInfo.doorColor} verrouillée ! Trouvez la clé.`, 'warning');
+                        showToast(`🚪 Porte ${cellInfo.doorColor} verrouillée !`, 'warning');
                         return;
                     }
                     break;
@@ -299,18 +292,47 @@ function Game() {
                 case 'enemy':
                     if (!defeatedEnemies.includes(targetKey)) {
                         const enemy = level.enemies.find(e => e.type === cellInfo.enemyType);
-                        
-                        if (!canDefeatEnemy(cellInfo.enemyType)) {
-                            setBlockedEnemies(prev => [...prev, targetKey]);
-                            setTimer(prev => prev + TIME_PENALTY);
-                            showToast(`⚔️ Arme insuffisante ! +${TIME_PENALTY}s de pénalité`, 'error');
+
+                        // Vérifier si le joueur peut combattre
+                        const fightCheck = canFightEnemy(inventory, weaponsCatalog, cellInfo.enemyType);
+
+                        if (!fightCheck.canFight) {
+                            // Pas d'arme appropriée - perdre des HP à chaque tentative
+                            const damageReceived = enemy.attack * 2;
+                            const newHP = takeDamage(damageReceived);
+
+                            showToast(`⚔️ Arme insuffisante ! -${damageReceived} HP`, 'error');
+
+                            // Si le joueur est mort, arrêter
+                            if (newHP <= 0) {
+                                return;
+                            }
+                            // Bloquer le mouvement mais permettre de réessayer
                             return;
                         }
 
-                        // A la bonne arme - vaincre automatiquement l'ennemi
-                        setDefeatedEnemies(prev => [...prev, targetKey]);
-                        setBlockedEnemies(prev => prev.filter(key => key !== targetKey));
-                        showToast(`⚔️ ${enemy?.name} vaincu !`, 'success');
+                        // Simuler le combat
+                        const combatResult = simulateCombat(playerHP, fightCheck.damage, enemy);
+                        
+                        if (combatResult.victory) {
+                            // Victoire - appliquer les dégâts au joueur
+                            const newHP = takeDamage(combatResult.playerHPLost);
+                            
+                            setDefeatedEnemies(prev => [...prev, targetKey]);
+                            setBlockedEnemies(prev => prev.filter(key => key !== targetKey));
+                            
+                            showToast(getCombatMessage(combatResult, enemy), 'success');
+                            
+                            // Game over si HP = 0
+                            if (newHP <= 0) {
+                                return;
+                            }
+                        } else {
+                            // Défaite - game over
+                            takeDamage(combatResult.playerHPLost);
+                            showToast(getCombatMessage(combatResult, enemy), 'error');
+                            return;
+                        }
                     }
                     break;
 
@@ -398,6 +420,17 @@ function Game() {
         );
     }
 
+    if (isGameOver) {
+        return (
+            <GameOver
+                username={username}
+                level={currentLevelId}
+                moveCount={moveCount}
+                timeElapsed={timer}
+            />
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6">
             <div className="w-full max-w-7xl">
@@ -416,6 +449,11 @@ function Game() {
                     </div>
 
                     <div className="w-24"></div>
+                </div>
+
+                {/* Barre de HP */}
+                <div className="flex justify-center mb-4">
+                    <HPBar currentHP={playerHP} maxHP={MAX_HP} />
                 </div>
 
                 <div className="flex items-center justify-center gap-6 mb-4">

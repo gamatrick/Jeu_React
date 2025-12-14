@@ -12,8 +12,8 @@ function Highscores() {
     const loadHighscores = () => {
         try {
             const storedScores = JSON.parse(localStorage.getItem('highscores') || '[]');
-            // Trier par meilleur temps (score le plus bas)
-            const sortedScores = storedScores.sort((a, b) => a.score - b.score);
+            // Trier par meilleur score (score le plus élevé)
+            const sortedScores = storedScores.sort((a, b) => calculateFinalScore(b) - calculateFinalScore(a));
             setScores(sortedScores);
         } catch (error) {
             console.error('Erreur lors du chargement des scores:', error);
@@ -25,6 +25,30 @@ function Highscores() {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    /**
+     * Calcule le score final basé sur le temps et les HP
+     * Temps a 70% de poids, HP a 30% de poids
+     * Score plus élevé = meilleur
+     */
+    const calculateFinalScore = (scoreData) => {
+        const time = scoreData.score || 0;
+        const hp = scoreData.finalHP || 0;
+
+        // Composante temps : plus le temps est bas, meilleur c'est
+        // Inversé pour que moins de temps = plus de points
+        // On utilise 1000 comme base, puis on soustrait le temps
+        const timeScore = Math.max(0, 1000 - time);
+
+        // Composante HP : plus de HP restants = meilleur
+        // HP sur 100 max
+        const hpScore = hp * 10; // Multiplié par 10 pour avoir une échelle de 0-1000
+
+        // Score final : 70% temps + 30% HP
+        const finalScore = Math.round(timeScore * 0.7 + hpScore * 0.3);
+
+        return finalScore;
     };
 
     const clearScores = () => {
@@ -58,36 +82,52 @@ function Highscores() {
                             <table className="border-collapse">
                                 <thead>
                                     <tr className="border-b-2 border-gray-600">
-                                        <th className="text-center py-4 px-8 text-gray-300 font-bold text-xl">
+                                        <th className="text-center py-4 px-6 text-gray-300 font-bold text-xl">
                                             Nom
                                         </th>
-                                        <th className="text-center py-4 px-8 text-gray-300 font-bold text-xl">
+                                        <th className="text-center py-4 px-6 text-gray-300 font-bold text-xl">
                                             Temps
                                         </th>
-                                        <th className="text-center py-4 px-8 text-gray-300 font-bold text-xl">
+                                        <th className="text-center py-4 px-6 text-gray-300 font-bold text-xl">
                                             Mouvements
+                                        </th>
+                                        <th className="text-center py-4 px-6 text-gray-300 font-bold text-xl">
+                                            HP
+                                        </th>
+                                        <th className="text-center py-4 px-6 text-gray-300 font-bold text-xl">
+                                            Score
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {scores.map((score, index) => (
+                                    {scores.map((score) => (
                                         <tr
                                             key={score.id}
                                             className="border-b border-gray-600 hover:bg-gray-700 transition-colors"
                                         >
-                                            <td className="py-5 px-8 text-center">
+                                            <td className="py-5 px-6 text-center">
                                                 <span className="text-white font-semibold text-xl">
                                                     {score.playerName}
                                                 </span>
                                             </td>
-                                            <td className="py-5 px-8 text-center">
+                                            <td className="py-5 px-6 text-center">
                                                 <span className="text-white font-bold text-2xl">
                                                     {formatTime(score.score)}
                                                 </span>
                                             </td>
-                                            <td className="py-5 px-8 text-center">
+                                            <td className="py-5 px-6 text-center">
                                                 <span className="text-white font-bold text-2xl">
                                                     {score.moveCount}
+                                                </span>
+                                            </td>
+                                            <td className="py-5 px-6 text-center">
+                                                <span className="text-green-400 font-bold text-2xl">
+                                                    {score.finalHP || 0}
+                                                </span>
+                                            </td>
+                                            <td className="py-5 px-6 text-center">
+                                                <span className="text-yellow-400 font-bold text-2xl">
+                                                    {calculateFinalScore(score)}
                                                 </span>
                                             </td>
                                         </tr>
