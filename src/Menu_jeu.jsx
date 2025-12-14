@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
+import { stopChrono } from './HighScores';
 
 export default function Menu_jeu() {
   const navigate = useNavigate();
-  
+  stopChrono();
+
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6">
       <div className="text-center space-y-8">
@@ -12,7 +14,7 @@ export default function Menu_jeu() {
         
         <div className="flex flex-col gap-4">
           <button 
-            onClick={() => navigate('/jeu')}
+            onClick={() => navigate('/username')}
             className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white text-xl font-semibold rounded-lg transition-colors shadow-lg"
           >
             🎯 Jouer
