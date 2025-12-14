@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Grid from './Grid';
 import { useNavigate } from 'react-router-dom';
-import { stopChrono, startChrono } from './HighScores';
+import { stopChrono, startChrono, saveHighScore } from './HighScores';
 
 const API_URL = 'http://localhost:4000/api';
 
@@ -202,6 +202,8 @@ function Game() {
       setIsComplete(true);
       stopChrono();
       console.log(`Niveau ${currentLevelId} terminé !`);
+
+      saveHighScore(username, currentLevelId, time);
 
       setTimeout(() => {
         const nextLevel = currentLevelId + 1;

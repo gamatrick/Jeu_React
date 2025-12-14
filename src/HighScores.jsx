@@ -52,4 +52,38 @@ export function stopChrono() {
 }
 
 
+export async function saveHighScore(username, time, levelId) {
+  try {
+    const response = await fetch(`${API_URL}/highscores`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        playerName: username,
+        score: time,
+        levelId: levelId,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(
+        "Erreur lors de l'enregistrement du highscore",
+        response.status
+      );
+      return null;
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(
+      "Erreur réseau lors de l'enregistrement du highscore",
+      error
+    );
+    return null;
+  }
+}
+
+
 export default HighScores;
