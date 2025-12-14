@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import './Toast.css';
 
 function Toast({ message, type = 'info', isVisible, onClose }) {
     useEffect(() => {
@@ -12,41 +13,41 @@ function Toast({ message, type = 'info', isVisible, onClose }) {
 
     if (!isVisible) return null;
 
-    const getTypeStyles = () => {
+    const getTypeClass = () => {
         switch (type) {
             case 'error':
-                return 'bg-red-600 border-red-500';
+                return 'toast-error';
             case 'warning':
-                return 'bg-yellow-600 border-yellow-500';
+                return 'toast-warning';
             case 'success':
-                return 'bg-green-600 border-green-500';
+                return 'toast-success';
             case 'info':
-                return 'bg-blue-600 border-blue-500';
+                return 'toast-info';
             default:
-                return 'bg-gray-700 border-gray-600';
+                return 'toast-default';
         }
     };
 
     const getIcon = () => {
         switch (type) {
             case 'error':
-                return '❌';
+                return '⚔️';
             case 'warning':
-                return '⚠️';
+                return '🛡️';
             case 'success':
-                return '✅';
+                return '✨';
             case 'info':
-                return 'ℹ️';
+                return '📜';
             default:
                 return '💬';
         }
     };
 
     return (
-        <div className={`${getTypeStyles()} text-white px-6 py-3 rounded-lg border-2 shadow-lg animate-bounce-in`}>
-            <div className="flex items-center gap-3">
-                <span className="text-2xl">{getIcon()}</span>
-                <p className="text-lg font-semibold">{message}</p>
+        <div className={`toast ${getTypeClass()}`}>
+            <div className="toast-content">
+                <span className="toast-icon">{getIcon()}</span>
+                <p className="toast-message">{message}</p>
             </div>
         </div>
     );

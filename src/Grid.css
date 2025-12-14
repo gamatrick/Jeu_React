@@ -1,0 +1,20 @@
+/* Grid.css */
+
+.grid-container {
+    display: grid;
+    gap: 2px;
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
+    padding: 16px;
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 40px rgba(139, 92, 246, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.1);
+    border: 3px solid rgba(168, 85, 247, 0.5);
+    width: fit-content;
+}
+
+/* Small screen adjustments */
+@media (max-width: 639px) {
+    .grid-container-small {
+        padding: 12px;
+        border-radius: 16px;
+    }
+}

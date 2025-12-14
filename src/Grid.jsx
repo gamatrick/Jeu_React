@@ -1,5 +1,6 @@
 import React from 'react';
 import Tile from './Tile';
+import './Grid.css';
 
 function Grid({ level, revealed, playerPos, onMove, defeatedEnemies, clearedObstacles, blockedEnemies, inventory }) {
     const handleTileClick = (row, col) => {
@@ -47,21 +48,14 @@ function Grid({ level, revealed, playerPos, onMove, defeatedEnemies, clearedObst
     };
 
     return (
-        <>
-            <div
-                style={{
-                    display: 'grid',
-                    gridTemplateColumns: `repeat(${level.cols}, ${tileSize}px)`,
-                    gridTemplateRows: `repeat(${level.rows}, ${tileSize}px)`,
-                    gap: `${gapSize}px`,
-                    backgroundColor: '#0f172a',
-                    padding: tileSize < 56 ? '8px' : '12px',
-                    borderRadius: tileSize < 56 ? '12px' : '16px',
-                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4)',
-                    border: '3px solid #1e293b',
-                    width: 'fit-content'
-                }}
-            >
+        <div
+            className={`grid-container ${tileSize < 56 ? 'grid-container-small' : ''}`}
+            style={{
+                gridTemplateColumns: `repeat(${level.cols}, ${tileSize}px)`,
+                gridTemplateRows: `repeat(${level.rows}, ${tileSize}px)`,
+                gap: `${gapSize}px`
+            }}
+        >
                 {level.grid.map((row, rowIdx) =>
                     row.map((cell, colIdx) => {
                         const key = `${rowIdx},${colIdx}`;
@@ -101,8 +95,7 @@ function Grid({ level, revealed, playerPos, onMove, defeatedEnemies, clearedObst
                         );
                     })
                 )}
-            </div>
-        </>
+        </div>
     );
 }
 

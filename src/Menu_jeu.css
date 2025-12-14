@@ -1,0 +1,138 @@
+/* Menu_jeu.css */
+
+.menu-container {
+    min-height: 100vh;
+    background: linear-gradient(to bottom, #312e81, #581c87, #0f172a);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.stars-container {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+.star {
+    position: absolute;
+    background-color: white;
+    border-radius: 9999px;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.menu-content {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    max-width: 42rem;
+}
+
+.menu-title-section {
+    margin-bottom: 3rem;
+}
+
+.menu-title {
+    font-size: 3.75rem;
+    font-weight: bold;
+    background: linear-gradient(to right, #fcd34d, #fef08a, #fcd34d);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: 0.025em;
+    filter: drop-shadow(0 25px 25px rgb(0 0 0 / 0.15));
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+    .menu-title {
+        font-size: 6rem;
+    }
+}
+
+.menu-subtitle {
+    font-size: 1.25rem;
+    color: #e9d5ff;
+    font-weight: 500;
+    font-style: italic;
+}
+
+@media (min-width: 768px) {
+    .menu-subtitle {
+        font-size: 1.5rem;
+    }
+}
+
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 4rem;
+}
+
+.menu-button {
+    position: relative;
+    padding: 1.25rem 3rem;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    border-radius: 1rem;
+    transition: all 0.3s;
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    border: 2px solid;
+    cursor: pointer;
+}
+
+.menu-button-play {
+    background: linear-gradient(to right, #059669, #0d9488);
+    border-color: rgba(52, 211, 153, 0.5);
+}
+
+.menu-button-play:hover {
+    background: linear-gradient(to right, #10b981, #14b8a6);
+    box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.5);
+    transform: scale(1.05);
+}
+
+.menu-button-highscores {
+    background: linear-gradient(to right, #d97706, #ea580c);
+    border-color: rgba(251, 191, 36, 0.5);
+}
+
+.menu-button-highscores:hover {
+    background: linear-gradient(to right, #f59e0b, #f97316);
+    box-shadow: 0 25px 50px -12px rgba(245, 158, 11, 0.5);
+    transform: scale(1.05);
+}
+
+.menu-button-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.menu-button-icon {
+    font-size: 1.875rem;
+}
+
+.menu-footer-text {
+    font-size: 0.875rem;
+    color: rgba(216, 180, 254, 0.7);
+    font-style: italic;
+    margin-top: 2rem;
+}

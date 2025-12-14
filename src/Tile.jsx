@@ -1,4 +1,5 @@
 import React from 'react';
+import './Tile.css';
 
 function Tile({ cell, isRevealed, hasPlayer, onClick, isDefeated, isCleared, hasKey, tileSize = 64, isBlocked, enemyColor }) {
     const getCellInfo = () => {
@@ -25,33 +26,34 @@ function Tile({ cell, isRevealed, hasPlayer, onClick, isDefeated, isCleared, has
 
     const cellInfo = getCellInfo();
 
-    const getBackground = () => {
-        if (!isRevealed) return '#6b7280';
+    const getBackgroundClass = () => {
+        if (!isRevealed) return 'tile-bg-hidden';
 
-        // Si l'ennemi est bloqué (pas la bonne arme), case rouge
+        // Si l'ennemi est bloqué (pas la bonne arme), case rouge dangereuse
         if (isBlocked && cellInfo.type === 'enemy') {
-            return '#991b1b'; // Rouge foncé
+            return 'tile-bg-blocked-enemy';
         }
 
         switch (cellInfo.type) {
             case 'S':
+                return 'tile-bg-start';
             case 'C':
-                return '#16a34a';
+                return 'tile-bg-corridor';
             case 'W':
-                return '#92400e';
+                return 'tile-bg-wall';
             case 'E':
-                return '#fbbf24';
+                return 'tile-bg-end';
             case 'enemy':
-                return isDefeated ? '#16a34a' : '#dc2626';
+                return isDefeated ? 'tile-bg-enemy-defeated' : 'tile-bg-enemy';
             case 'obstacle':
-                return isCleared ? '#16a34a' : '#f59e0b';
+                return isCleared ? 'tile-bg-obstacle-cleared' : 'tile-bg-obstacle';
             case 'door':
-                return cellInfo.doorColor === 'red' ? '#7f1d1d' : '#1e3a8a';
+                return cellInfo.doorColor === 'red' ? 'tile-bg-door-red' : 'tile-bg-door-blue';
             case 'key':
             case 'item':
-                return '#8b5cf6';
+                return 'tile-bg-item';
             default:
-                return '#6b7280';
+                return 'tile-bg-hidden';
         }
     };
 
@@ -61,14 +63,12 @@ function Tile({ cell, isRevealed, hasPlayer, onClick, isDefeated, isCleared, has
         // Si l'ennemi est bloqué, afficher un rond de couleur
         if (isBlocked && cellInfo.type === 'enemy' && enemyColor) {
             return (
-                <div 
+                <div
+                    className="enemy-color-indicator"
                     style={{
                         width: `${tileSize * 0.6}px`,
                         height: `${tileSize * 0.6}px`,
-                        backgroundColor: enemyColor,
-                        borderRadius: '50%',
-                        border: '3px solid white',
-                        boxShadow: '0 0 10px rgba(0,0,0,0.5)'
+                        backgroundColor: enemyColor
                     }}
                 />
             );
@@ -113,54 +113,30 @@ function Tile({ cell, isRevealed, hasPlayer, onClick, isDefeated, isCleared, has
         }
     };
 
-    const fontSize = tileSize < 56 ? '16px' : tileSize < 64 ? '20px' : '24px';
+    const fontSizeClass = tileSize < 56 ? 'tile-text-small' : tileSize < 64 ? 'tile-text-medium' : 'tile-text-large';
     const playerSize = Math.max(16, tileSize * 0.35);
 
     return (
-        <>
-            <div
-                onClick={onClick}
-                style={{
-                    width: `${tileSize}px`,
-                    height: `${tileSize}px`,
-                    backgroundColor: getBackground(),
-                    border: '1px solid #1e293b',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    fontSize: fontSize,
-                    borderRadius: '4px',
-                    transition: 'all 0.2s ease',
-                    boxShadow: isRevealed ? 'inset 0 2px 4px rgba(0,0,0,0.3)' : 'none'
-                }}
-                onMouseEnter={(e) => {
-                    if (isRevealed) {
-                        e.currentTarget.style.transform = 'scale(1.05)';
-                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.4)';
-                    }
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.boxShadow = isRevealed ? 'inset 0 2px 4px rgba(0,0,0,0.3)' : 'none';
-                }}
-            >
-                {getIcon()}
-                {hasPlayer && (
-                    <div style={{
-                        position: 'absolute',
+        <div
+            onClick={onClick}
+            className={`tile ${getBackgroundClass()} ${isRevealed ? 'tile-revealed' : 'tile-unrevealed'} ${fontSizeClass}`}
+            style={{
+                width: `${tileSize}px`,
+                height: `${tileSize}px`
+            }}
+        >
+            {getIcon()}
+            {hasPlayer && (
+                <div
+                    className="player-indicator"
+                    style={{
                         width: `${playerSize}px`,
                         height: `${playerSize}px`,
-                        backgroundColor: '#3b82f6',
-                        borderRadius: '50%',
-                        border: `${Math.max(2, tileSize * 0.04)}px solid #ffffff`,
-                        boxShadow: '0 0 10px rgba(59, 130, 246, 0.8)',
-                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
-                    }} />
-                )}
-            </div>
-        </>
+                        border: `${Math.max(2, tileSize * 0.04)}px solid #fbbf24`
+                    }}
+                />
+            )}
+        </div>
     );
 }
 

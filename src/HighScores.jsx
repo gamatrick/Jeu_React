@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import './Highscores.css';
 
 function Highscores() {
     const [scores, setScores] = useState([]);
@@ -59,74 +60,71 @@ function Highscores() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6">
-            <div className="w-full max-w-5xl">
-                <div className="text-center mb-8">
-                    <h1 className="text-5xl md:text-7xl font-bold text-white tracking-wider mb-4">
-                        🏆 High Scores
+        <div className="highscores-container">
+            <div className="highscores-content">
+                <div className="highscores-header">
+                    <h1 className="highscores-title">
+                        🏆 Hall des Légendes
                     </h1>
-                    <p className="text-gray-400 text-lg">
-                        Les meilleurs temps pour compléter tous les niveaux
+                    <p className="highscores-subtitle">
+                        Les plus grands héros du royaume
                     </p>
                 </div>
 
-                <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 border-2 border-gray-700 mb-6">
+                <div className="highscores-card">
                     {scores.length === 0 ? (
-                        <p className="text-center text-gray-400 text-xl py-8">
-                            Aucun score enregistré pour le moment.
-                            <br />
-                            Soyez le premier à terminer le jeu !
-                        </p>
+                        <div className="highscores-empty">
+                            <p className="highscores-empty-title">
+                                Le hall est vide...
+                            </p>
+                            <p className="highscores-empty-subtitle">
+                                Soyez le premier héros à graver votre nom dans l'histoire !
+                            </p>
+                        </div>
                     ) : (
-                        <div className="overflow-x-auto flex justify-center">
-                            <table className="border-collapse">
+                        <div className="highscores-table-wrapper">
+                            <table className="highscores-table">
                                 <thead>
-                                    <tr className="border-b-2 border-gray-600">
-                                        <th className="text-center py-4 px-6 text-gray-300 font-bold text-xl">
-                                            Nom
-                                        </th>
-                                        <th className="text-center py-4 px-6 text-gray-300 font-bold text-xl">
-                                            Temps
-                                        </th>
-                                        <th className="text-center py-4 px-6 text-gray-300 font-bold text-xl">
-                                            Mouvements
-                                        </th>
-                                        <th className="text-center py-4 px-6 text-gray-300 font-bold text-xl">
-                                            HP
-                                        </th>
-                                        <th className="text-center py-4 px-6 text-gray-300 font-bold text-xl">
-                                            Score
-                                        </th>
+                                    <tr>
+                                        <th>🛡️ Héros</th>
+                                        <th>⏱️ Temps</th>
+                                        <th>👣 Pas</th>
+                                        <th>💚 Vitalité</th>
+                                        <th>⭐ Score</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {scores.map((score) => (
-                                        <tr
-                                            key={score.id}
-                                            className="border-b border-gray-600 hover:bg-gray-700 transition-colors"
-                                        >
-                                            <td className="py-5 px-6 text-center">
-                                                <span className="text-white font-semibold text-xl">
-                                                    {score.playerName}
-                                                </span>
+                                    {scores.map((score, index) => (
+                                        <tr key={score.id}>
+                                            <td>
+                                                <div className="highscores-player-cell">
+                                                    {index < 3 && (
+                                                        <span className="highscores-medal">
+                                                            {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                                                        </span>
+                                                    )}
+                                                    <span className="highscores-player-name">
+                                                        {score.playerName}
+                                                    </span>
+                                                </div>
                                             </td>
-                                            <td className="py-5 px-6 text-center">
-                                                <span className="text-white font-bold text-2xl">
+                                            <td>
+                                                <span className="highscores-time">
                                                     {formatTime(score.score)}
                                                 </span>
                                             </td>
-                                            <td className="py-5 px-6 text-center">
-                                                <span className="text-white font-bold text-2xl">
+                                            <td>
+                                                <span className="highscores-moves">
                                                     {score.moveCount}
                                                 </span>
                                             </td>
-                                            <td className="py-5 px-6 text-center">
-                                                <span className="text-green-400 font-bold text-2xl">
+                                            <td>
+                                                <span className="highscores-hp">
                                                     {score.finalHP || 0}
                                                 </span>
                                             </td>
-                                            <td className="py-5 px-6 text-center">
-                                                <span className="text-yellow-400 font-bold text-2xl">
+                                            <td>
+                                                <span className="highscores-score">
                                                     {calculateFinalScore(score)}
                                                 </span>
                                             </td>
@@ -138,20 +136,20 @@ function Highscores() {
                     )}
                 </div>
 
-                <div className="flex justify-center gap-4 flex-wrap">
+                <div className="highscores-buttons">
                     <button
                         onClick={() => navigate('/')}
-                        className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white text-xl font-semibold rounded-lg transition-colors shadow-lg"
+                        className="highscores-button highscores-button-back"
                     >
-                        ← Retour au menu
+                        ← Retour au Royaume
                     </button>
-                    
+
                     {scores.length > 0 && (
                         <button
                             onClick={clearScores}
-                            className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white text-xl font-semibold rounded-lg transition-colors shadow-lg"
+                            className="highscores-button highscores-button-clear"
                         >
-                            🗑️ Effacer les scores
+                            🗑️ Effacer l'Histoire
                         </button>
                     )}
                 </div>
