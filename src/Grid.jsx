@@ -6,26 +6,21 @@ function Grid({ level, revealed, playerPos, onMove, defeatedEnemies, clearedObst
         onMove(row, col);
     };
 
-    // Calculer la taille des tuiles en fonction de la taille de l'écran
     const getTileSize = () => {
         if (typeof window === 'undefined') return 64;
 
         const screenWidth = window.innerWidth;
         const maxCols = level.cols;
 
-        // Mobile très petit
         if (screenWidth < 400) {
             return Math.min(48, Math.floor((screenWidth - 40) / maxCols));
         }
-        // Mobile
         if (screenWidth < 640) {
             return Math.min(56, Math.floor((screenWidth - 40) / maxCols));
         }
-        // Tablette
         if (screenWidth < 1024) {
             return Math.min(64, Math.floor((screenWidth - 60) / maxCols));
         }
-        // Desktop
         return 64;
     };
 

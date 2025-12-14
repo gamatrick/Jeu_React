@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Grid from './Grid';
 import { useNavigate } from 'react-router-dom';
-import { stopChrono, startChrono } from './HighScores';
 
 const API_URL = 'http://localhost:4000/api';
 
@@ -20,7 +19,6 @@ function Game() {
     const [time, setTime] = useState(0);
 
     useEffect(() => {
-        // Vérifier si l'utilisateur a un pseudo
         const savedUsername = localStorage.getItem('playerUsername');
         if (!savedUsername) {
             navigate('/username');
@@ -35,6 +33,55 @@ function Game() {
         }
     }, [currentLevelId, username]);
 
+    // Gestion des touches clavier
+    useEffect(() => {
+        const handleKeyPress = (e) => {
+            if (!playerPos || isComplete || !level) return;
+
+            let newRow = playerPos.row;
+            let newCol = playerPos.col;
+
+            // Flèches directionnelles
+            if (e.key === 'ArrowUp') {
+                newRow -= 1;
+                e.preventDefault();
+            } else if (e.key === 'ArrowDown') {
+                newRow += 1;
+                e.preventDefault();
+            } else if (e.key === 'ArrowLeft') {
+                newCol -= 1;
+                e.preventDefault();
+            } else if (e.key === 'ArrowRight') {
+                newCol += 1;
+                e.preventDefault();
+            }
+            // ZQSD
+            else if (e.key.toLowerCase() === 'z') {
+                newRow -= 1;
+                e.preventDefault();
+            } else if (e.key.toLowerCase() === 's') {
+                newRow += 1;
+                e.preventDefault();
+            } else if (e.key.toLowerCase() === 'q') {
+                newCol -= 1;
+                e.preventDefault();
+            } else if (e.key.toLowerCase() === 'd') {
+                newCol += 1;
+                e.preventDefault();
+            }
+
+            // Vérifier si la position a changé et si elle est valide
+            if ((newRow !== playerPos.row || newCol !== playerPos.col) &&
+                newRow >= 0 && newRow < level.rows &&
+                newCol >= 0 && newCol < level.cols) {
+                handleMove(newRow, newCol);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyPress);
+        return () => window.removeEventListener('keydown', handleKeyPress);
+    }, [playerPos, isComplete, level]);
+
     const loadLevel = (levelId) => {
         setLoading(true);
         setIsComplete(false);
@@ -46,7 +93,6 @@ function Game() {
         fetch(`${API_URL}/levels/${levelId}`)
             .then(res => res.json())
             .then(data => {
-                console.log('Niveau chargé:', data);
                 setLevel(data);
 
                 const startKey = `${data.start.row},${data.start.col}`;
@@ -106,7 +152,6 @@ function Game() {
 
             switch (cellInfo.type) {
                 case 'W':
-                    console.log('Mur ! Le joueur reste sur place.');
                     return;
 
                 case 'door': {
@@ -115,7 +160,6 @@ function Game() {
                         alert(`🚪 Porte ${cellInfo.doorColor} verrouillée ! Trouvez la clé ${cellInfo.doorColor}.`);
                         return;
                     }
-                    console.log(`Porte ${cellInfo.doorColor} ouverte !`);
                     break;
                 }
 
@@ -125,7 +169,6 @@ function Game() {
                         const confirmed = window.confirm(`⚔️ Combat contre ${enemy?.name || 'un ennemi'} (HP: ${enemy?.hp}, ATK: ${enemy?.attack}) !`);
                         if (confirmed) {
                             setDefeatedEnemies(prev => [...prev, targetKey]);
-                            console.log(`Ennemi vaincu : ${enemy?.name}`);
                         } else {
                             return;
                         }
@@ -141,7 +184,6 @@ function Game() {
                             return;
                         }
                         setClearedObstacles(prev => [...prev, targetKey]);
-                        console.log(`Obstacle franchi : ${obstacle?.name}`);
                     }
                     break;
 
@@ -149,7 +191,6 @@ function Game() {
                     const keyId = `key_${cellInfo.keyColor}`;
                     if (!inventory.includes(keyId)) {
                         setInventory(prev => [...prev, keyId]);
-                        console.log(`🔑 Clé ${cellInfo.keyColor} récupérée !`);
                     }
                     break;
                 }
@@ -158,7 +199,6 @@ function Game() {
                     if (!inventory.includes(cellInfo.itemId)) {
                         setInventory(prev => [...prev, cellInfo.itemId]);
                         const item = level.items.find(i => i.id === cellInfo.itemId);
-                        console.log(`🎒 ${item?.name || 'Item'} récupéré !`);
                     }
                     break;
             }
@@ -167,8 +207,6 @@ function Game() {
 
             if (cellInfo.type === 'E') {
                 setIsComplete(true);
-                stopChrono();
-                console.log(`Niveau ${currentLevelId} terminé !`);
 
                 setTimeout(() => {
                     const nextLevel = currentLevelId + 1;
@@ -199,7 +237,7 @@ function Game() {
                 <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
                     <div className="text-center">
                         <p className="text-2xl mb-4">❌ Erreur de chargement</p>
-                        <p className="text-sm">Vérifiez que l'API tourne sur le port 4000</p>
+                        <p className="text-sm">Vérifiez que l'API tourne sur le bon port</p>
                         <button
                             onClick={() => navigate('/')}
                             className="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
@@ -230,6 +268,9 @@ function Game() {
                             </h1>
                             <p className="text-blue-400 text-lg mt-2">
                                 👤 {username}
+                            </p>
+                            <p className="text-gray-400 text-sm mt-1">
+                                ⌨️ Utilisez les flèches ou ZQSD pour vous déplacer
                             </p>
                         </div>
 
