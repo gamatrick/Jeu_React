@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import Grid from './Grid';
 import Toast from './Toast';
 import HPBar from './Hpbar';
-import GameOver from './GameOver';
+import GameOver from './Gameover';
 import { useNavigate } from 'react-router-dom';
-import { canFightEnemy, simulateCombat, getCombatMessage } from './combatSystem';
+import { canFightEnemy, simulateCombat, getCombatMessage  } from './combatsystem'
 
 const API_URL = 'http://localhost:4000/api';
 const MAX_HP = 100; // HP maximum du joueur
