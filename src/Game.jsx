@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Grid from './Grid';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,8 +15,11 @@ function Game() {
     const [defeatedEnemies, setDefeatedEnemies] = useState([]);
     const [clearedObstacles, setClearedObstacles] = useState([]);
     const [username, setUsername] = useState('');
+    const [timer, setTimer] = useState(0);
+    const [hasStarted, setHasStarted] = useState(false);
+    const [moveCount, setMoveCount] = useState(0);
     const navigate = useNavigate();
-    const [time, setTime] = useState(0);
+    const timerIntervalRef = useRef(null);
 
     useEffect(() => {
         const savedUsername = localStorage.getItem('playerUsername');
@@ -32,6 +35,25 @@ function Game() {
             loadLevel(currentLevelId);
         }
     }, [currentLevelId, username]);
+
+    // Gestion du chronomètre
+    useEffect(() => {
+        if (hasStarted && !isComplete) {
+            timerIntervalRef.current = setInterval(() => {
+                setTimer(prev => prev + 1);
+            }, 1000);
+        } else {
+            if (timerIntervalRef.current) {
+                clearInterval(timerIntervalRef.current);
+            }
+        }
+
+        return () => {
+            if (timerIntervalRef.current) {
+                clearInterval(timerIntervalRef.current);
+            }
+        };
+    }, [hasStarted, isComplete]);
 
     // Gestion des touches clavier
     useEffect(() => {
@@ -88,7 +110,6 @@ function Game() {
         setInventory([]);
         setDefeatedEnemies([]);
         setClearedObstacles([]);
-        startChrono();
 
         fetch(`${API_URL}/levels/${levelId}`)
             .then(res => res.json())
@@ -135,6 +156,33 @@ function Game() {
         }
     };
 
+    const saveScore = (finalTime) => {
+        try {
+            // Récupérer les scores existants depuis localStorage
+            const existingScores = JSON.parse(localStorage.getItem('highscores') || '[]');
+            
+            const newScore = {
+                id: existingScores.length ? Math.max(...existingScores.map(s => s.id)) + 1 : 1,
+                playerName: username,
+                score: finalTime,
+                moveCount: moveCount + 1,
+                createdAt: new Date().toISOString()
+            };
+            
+            existingScores.push(newScore);
+            
+            // Trier par meilleur temps et garder seulement les 20 meilleurs
+            existingScores.sort((a, b) => a.score - b.score);
+            const topScores = existingScores.slice(0, 20);
+            
+            localStorage.setItem('highscores', JSON.stringify(topScores));
+            
+            console.log('Score sauvegardé avec succès');
+        } catch (error) {
+            console.error('Erreur lors de la sauvegarde du score:', error);
+        }
+    };
+
     const handleMove = (targetRow, targetCol) => {
         if (!level || !playerPos || isComplete) return;
 
@@ -149,6 +197,15 @@ function Game() {
             const cellInfo = getCellType(targetCell);
 
             setRevealed(prev => ({ ...prev, [targetKey]: true }));
+
+            // Démarrer le chrono au premier mouvement
+            if (!hasStarted) {
+                setHasStarted(true);
+            }
+
+            // Incrémenter le compteur de mouvements et ajouter 1 seconde
+            setMoveCount(prev => prev + 1);
+            setTimer(prev => prev + 1);
 
             switch (cellInfo.type) {
                 case 'W':
@@ -208,17 +265,30 @@ function Game() {
             if (cellInfo.type === 'E') {
                 setIsComplete(true);
 
-                setTimeout(() => {
-                    const nextLevel = currentLevelId + 1;
-                    if (nextLevel <= 4) {
+                const nextLevel = currentLevelId + 1;
+                if (nextLevel <= 4) {
+                    setTimeout(() => {
                         setCurrentLevelId(nextLevel);
-                    } else {
-                        alert('🎉 Félicitations ! Vous avez terminé tous les niveaux !');
-                        navigate('/');
-                    }
-                }, 5000);
+                        setIsComplete(false);
+                    }, 2000);
+                } else {
+                    // Dernier niveau terminé - sauvegarder le score
+                    const finalTime = timer + 1; // +1 pour le dernier mouvement
+                    saveScore(finalTime);
+                    
+                    setTimeout(() => {
+                        alert(`🎉 Félicitations ${username} !\nVous avez terminé tous les niveaux en ${Math.floor(finalTime / 60)}:${(finalTime % 60).toString().padStart(2, '0')} !\nMovements: ${moveCount + 1}\n\nLe score a été sauvegardé !`);
+                        navigate('/highscores');
+                    }, 1000);
+                }
             }
         }
+    };
+
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
     if (loading) {
@@ -277,9 +347,28 @@ function Game() {
                         <div className="w-24"></div>
                     </div>
 
+                    {/* Chronomètre et compteur de mouvements */}
+                    <div className="bg-gradient-to-r from-blue-900 to-purple-900 text-white px-8 py-4 rounded-xl shadow-lg mb-6 border-2 border-blue-500">
+                        <div className="flex items-center justify-center gap-8">
+                            <div className="text-center">
+                                <p className="text-sm text-gray-300 mb-1">Temps</p>
+                                <p className="text-3xl font-bold font-mono">
+                                    ⏱️ {formatTime(timer)}
+                                </p>
+                            </div>
+                            <div className="w-px h-12 bg-gray-500"></div>
+                            <div className="text-center">
+                                <p className="text-sm text-gray-300 mb-1">Mouvements</p>
+                                <p className="text-3xl font-bold">
+                                    🚶 {moveCount}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     {isComplete && (
                         <div className="bg-green-600 text-white px-6 py-3 rounded-lg text-xl font-bold animate-pulse mb-6 text-center">
-                            ✅ Niveau terminé ! Niveau suivant dans 5 secondes...
+                            ✅ Niveau terminé ! {currentLevelId < 4 ? 'Niveau suivant dans 2 secondes...' : 'Calcul du score final...'}
                         </div>
                     )}
 
@@ -328,10 +417,9 @@ function Game() {
                         />
                     </div>
                 </div>
-                Time : {time}
             </div>
         </>
     );
-  }
+}
 
 export default Game;
