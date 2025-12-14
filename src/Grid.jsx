@@ -1,7 +1,7 @@
 import React from 'react';
 import Tile from './Tile';
 
-function Grid({ level, revealed, playerPos, onMove, defeatedEnemies, clearedObstacles, inventory }) {
+function Grid({ level, revealed, playerPos, onMove, defeatedEnemies, clearedObstacles, blockedEnemies, inventory }) {
     const handleTileClick = (row, col) => {
         onMove(row, col);
     };
@@ -37,6 +37,15 @@ function Grid({ level, revealed, playerPos, onMove, defeatedEnemies, clearedObst
 
     const gapSize = 2;
 
+    const getEnemyColor = (row, col) => {
+        const cell = level.grid[row][col];
+        if (!cell || !cell.startsWith('M:')) return null;
+        
+        const enemyType = cell.split(':')[1];
+        const enemy = level.enemies?.find(e => e.type === enemyType);
+        return enemy?.color || null;
+    };
+
     return (
         <>
             <div
@@ -59,6 +68,7 @@ function Grid({ level, revealed, playerPos, onMove, defeatedEnemies, clearedObst
                         const hasPlayer = playerPos.row === rowIdx && playerPos.col === colIdx;
                         const isDefeated = defeatedEnemies.includes(key);
                         const isCleared = clearedObstacles.includes(key);
+                        const isBlocked = blockedEnemies.includes(key);
 
                         let hasKey = false;
                         if (cell?.startsWith('K:')) {
@@ -83,6 +93,8 @@ function Grid({ level, revealed, playerPos, onMove, defeatedEnemies, clearedObst
                                 onClick={() => handleTileClick(rowIdx, colIdx)}
                                 isDefeated={isDefeated}
                                 isCleared={isCleared}
+                                isBlocked={isBlocked}
+                                enemyColor={getEnemyColor(rowIdx, colIdx)}
                                 hasKey={hasKey}
                                 tileSize={tileSize}
                             />

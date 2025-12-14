@@ -54,17 +54,17 @@ function Highscores() {
                             Soyez le premier à terminer le jeu !
                         </p>
                     ) : (
-                        <div className="display: flex text-center">
-                            <table className="w-full border-collapse mx-auto margin-right: auto margin-left: auto">
+                        <div className="overflow-x-auto flex justify-center">
+                            <table className="border-collapse">
                                 <thead>
-                                    <tr className="border-b-2 border-gray-600 text-center ">
-                                        <th className="text-center py-4 px-6 text-gray-300 font-bold text-xl">
+                                    <tr className="border-b-2 border-gray-600">
+                                        <th className="text-center py-4 px-8 text-gray-300 font-bold text-xl">
                                             Nom
                                         </th>
-                                        <th className="text-center py-4 px-6 text-gray-300 font-bold text-xl">
+                                        <th className="text-center py-4 px-8 text-gray-300 font-bold text-xl">
                                             Temps
                                         </th>
-                                        <th className="text-center py-4 px-6 text-gray-300 font-bold text-xl">
+                                        <th className="text-center py-4 px-8 text-gray-300 font-bold text-xl">
                                             Mouvements
                                         </th>
                                     </tr>
@@ -75,17 +75,17 @@ function Highscores() {
                                             key={score.id}
                                             className="border-b border-gray-600 hover:bg-gray-700 transition-colors"
                                         >
-                                            <td className="py-5 px-6 text-center">
+                                            <td className="py-5 px-8 text-center">
                                                 <span className="text-white font-semibold text-xl">
                                                     {score.playerName}
                                                 </span>
                                             </td>
-                                            <td className="py-5 px-6 text-center">
+                                            <td className="py-5 px-8 text-center">
                                                 <span className="text-white font-bold text-2xl">
                                                     {formatTime(score.score)}
                                                 </span>
                                             </td>
-                                            <td className="py-5 px-6 text-center">
+                                            <td className="py-5 px-8 text-center">
                                                 <span className="text-white font-bold text-2xl">
                                                     {score.moveCount}
                                                 </span>
