@@ -12,14 +12,14 @@ export default function Menu_jeu() {
         
         <div className="flex flex-col gap-4">
           <button 
-            onClick={() => navigate('/jeu')}
+            onClick={() => navigate('/username')}
             className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white text-xl font-semibold rounded-lg transition-colors shadow-lg"
           >
             🎯 Jouer
           </button>
           
           <button 
-            onClick={() => alert('High scores à venir !')}
+            onClick={() => navigate('/highscores')}
             className="px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white text-xl font-semibold rounded-lg transition-colors shadow-lg"
           >
             🏆 High Scores
