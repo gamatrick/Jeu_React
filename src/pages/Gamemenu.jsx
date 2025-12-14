@@ -3,9 +3,9 @@ import StarField from '../components/StarField';
 import '../styles/Gamemenu.css';
 
 
-// Composant Menu_jeu - Écran d'accueil principal du jeu
+// Composant Gamemenu - Écran d'accueil principal du jeu
 // Affiche le titre du jeu, les options de navigation et un arrière-plan étoilé
-function Menu_jeu() {
+function Gamemenu() {
     const navigate = useNavigate();
 
     // Navigue vers l'écran de sélection du nom d'utilisateur
