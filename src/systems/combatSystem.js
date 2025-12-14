@@ -1,29 +1,17 @@
-/**
- * Module de gestion des combats
- * Gère la logique de combat entre le joueur et les ennemis
- */
+// Module de gestion des combats
+// Gère la logique de combat entre le joueur et les ennemis
 
-/**
- * Calcule les dégâts infligés par une arme
- * @param {string} weaponId - ID de l'arme (dagger, sword, axe)
- * @returns {number} - Dégâts de l'arme
- */
+// Calcule les dégâts infligés par une arme
 export const getWeaponDamage = (weaponId) => {
     const weaponDamages = {
-        'dagger': 8,   // Dague : 8 dégâts
-        'sword': 15,   // Épée : 15 dégâts
-        'axe': 25      // Hache : 25 dégâts
+        'dagger': 8,
+        'sword': 15,
+        'axe': 25
     };
     return weaponDamages[weaponId] || 0;
 };
 
-/**
- * Vérifie si le joueur peut combattre un ennemi (a une arme assez puissante)
- * @param {Array} inventory - Inventaire du joueur
- * @param {Array} weaponsCatalog - Catalogue des armes
- * @param {string} enemyType - Type d'ennemi (slime, goblin, orc)
- * @returns {Object} - { canFight: boolean, weapon: Object|null, damage: number }
- */
+// Vérifie si le joueur peut combattre un ennemi (a une arme assez puissante)
 export const canFightEnemy = (inventory, weaponsCatalog, enemyType) => {
     // Trouver toutes les armes dans l'inventaire
     const playerWeapons = inventory.filter(item => {
@@ -53,13 +41,7 @@ export const canFightEnemy = (inventory, weaponsCatalog, enemyType) => {
     };
 };
 
-/**
- * Simule un combat entre le joueur et un ennemi
- * @param {number} playerHP - HP actuels du joueur
- * @param {number} weaponDamage - Dégâts de l'arme du joueur
- * @param {Object} enemy - Objet ennemi avec hp et attack
- * @returns {Object} - { victory: boolean, playerHPLost: number, turnsCount: number }
- */
+// Simule un combat entre le joueur et un ennemi
 export const simulateCombat = (playerHP, weaponDamage, enemy) => {
     let currentPlayerHP = playerHP;
     let currentEnemyHP = enemy.hp;
@@ -92,11 +74,7 @@ export const simulateCombat = (playerHP, weaponDamage, enemy) => {
     };
 };
 
-/**
- * Calcule les dégâts d'un piège
- * @param {string} trapType - Type de piège
- * @returns {number} - Dégâts du piège
- */
+// Calcule les dégâts d'un piège
 export const getTrapDamage = (trapType) => {
     const trapDamages = {
         'spike': 5,
@@ -106,12 +84,7 @@ export const getTrapDamage = (trapType) => {
     return trapDamages[trapType] || 5;
 };
 
-/**
- * Génère un message de résultat de combat
- * @param {Object} combatResult - Résultat du combat
- * @param {Object} enemy - Objet ennemi
- * @returns {string} - Message formaté
- */
+// Génère un message de résultat de combat
 export const getCombatMessage = (combatResult, enemy) => {
     if (combatResult.victory) {
         return `⚔️ Victoire contre ${enemy.name} !\n\n` +

@@ -1,9 +1,9 @@
 import { Routes, Route } from 'react-router-dom';
-import Menu_jeu from './Menu_jeu.jsx';
-import UsernameSelection from './UsernameSelection.jsx';
-import Game from './Game.jsx';
-import Highscores from './HighScores.jsx';
-import './App.css';
+import Menu_jeu from './pages/Menu_jeu.jsx';
+import UsernameSelection from './pages/UsernameSelection.jsx';
+import Game from './pages/Game.jsx';
+import Highscores from './pages/Highscores.jsx';
+import './styles/App.css';
 
 function Main() {
   return (

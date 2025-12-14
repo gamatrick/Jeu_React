@@ -1,23 +1,39 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import './UsernameSelection.css';
+import useUsernameValidation from '../hooks/useUsernameValidation';
+import '../styles/Usernameselection.css';
 
+
+// Composant UsernameSelection - Écran de sélection du nom du joueur
+// Permet au joueur de saisir son nom avant de commencer la partie
 function UsernameSelection() {
-    const [username, setUsername] = useState('');
-    const [error, setError] = useState('');
     const navigate = useNavigate();
+    const {
+        username,
+        error,
+        maxLength,
+        handleUsernameChange,
+        validate,
+        saveUsername
+    } = useUsernameValidation();
 
+
+    // Gère la soumission du formulaire
+    // Valide le nom d'utilisateur et navigue vers le jeu si 
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        if (username.trim().length === 0) {
-            setError('Veuillez entrer un pseudo (minimum 1 caractère)');
+        if (!validate()) {
             return;
         }
 
-        localStorage.setItem('playerUsername', username.trim());
-
+        saveUsername();
         navigate('/jeu');
+    };
+
+    // Navigue vers le menu principal
+    const handleBack = () => {
+        navigate('/');
     };
 
     return (
@@ -41,13 +57,10 @@ function UsernameSelection() {
                             type="text"
                             id="username"
                             value={username}
-                            onChange={(e) => {
-                                setUsername(e.target.value);
-                                setError('');
-                            }}
+                            onChange={(e) => handleUsernameChange(e.target.value)}
                             placeholder="Votre nom légendaire..."
                             className="username-input"
-                            maxLength={20}
+                            maxLength={maxLength}
                             autoFocus
                         />
                         {error && (
@@ -56,14 +69,14 @@ function UsernameSelection() {
                             </p>
                         )}
                         <p className="username-char-count">
-                            {username.length}/20 caractères
+                            {username.length}/{maxLength} caractères
                         </p>
                     </div>
 
                     <div className="username-buttons">
                         <button
                             type="button"
-                            onClick={() => navigate('/')}
+                            onClick={handleBack}
                             className="username-button username-button-back"
                         >
                             ← Retour
