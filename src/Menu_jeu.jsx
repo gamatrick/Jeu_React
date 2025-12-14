@@ -1,30 +1,67 @@
 import { useNavigate } from 'react-router-dom';
+import './Menu_jeu.css';
 
 export default function Menu_jeu() {
   const navigate = useNavigate();
-  
+
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6">
-      <div className="text-center space-y-8">
-        <h1 className="text-5xl md:text-7xl font-bold text-white tracking-wider mb-12">
-          🎮 Menu Principal
-        </h1>
-        
-        <div className="flex flex-col gap-4">
-          <button 
+    <div className="menu-container">
+      {/* Étoiles d'arrière-plan */}
+      <div className="stars-container">
+        {[...Array(50)].map((_, i) => (
+          <div
+            key={i}
+            className="star"
+            style={{
+              width: Math.random() * 3 + 1 + 'px',
+              height: Math.random() * 3 + 1 + 'px',
+              top: Math.random() * 100 + '%',
+              left: Math.random() * 100 + '%',
+              animationDelay: Math.random() * 3 + 's',
+              animationDuration: Math.random() * 3 + 2 + 's'
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="menu-content">
+        {/* Titre principal */}
+        <div className="menu-title-section">
+          <h1 className="menu-title">
+            ⚔️ Donjon Mystique
+          </h1>
+          <p className="menu-subtitle">
+            Explorez les profondeurs du royaume oublié
+          </p>
+        </div>
+
+        {/* Boutons */}
+        <div className="menu-buttons">
+          <button
             onClick={() => navigate('/username')}
-            className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white text-xl font-semibold rounded-lg transition-colors shadow-lg"
+            className="menu-button menu-button-play"
           >
-            🎯 Jouer
+            <span className="menu-button-content">
+              <span className="menu-button-icon">⚔️</span>
+              <span>Nouvelle Aventure</span>
+            </span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => navigate('/highscores')}
-            className="px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white text-xl font-semibold rounded-lg transition-colors shadow-lg"
+            className="menu-button menu-button-highscores"
           >
-            🏆 High Scores
+            <span className="menu-button-content">
+              <span className="menu-button-icon">🏆</span>
+              <span>Tableau des Héros</span>
+            </span>
           </button>
         </div>
+
+        {/* Texte décoratif */}
+        <p className="menu-footer-text">
+          Collectez des armes légendaires, combattez des monstres et devenez une légende
+        </p>
       </div>
     </div>
   );

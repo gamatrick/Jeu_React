@@ -4,7 +4,8 @@ import Toast from './Toast';
 import HPBar from './Hpbar';
 import GameOver from './Gameover';
 import { useNavigate } from 'react-router-dom';
-import { canFightEnemy, simulateCombat, getCombatMessage  } from './combatsystem'
+import { canFightEnemy, simulateCombat, getCombatMessage  } from './combatsystem';
+import './Game.css';
 
 const API_URL = 'http://localhost:4000/api';
 const MAX_HP = 100; // HP maximum du joueur
@@ -397,21 +398,21 @@ function Game() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
-                <p className="text-2xl">Chargement du niveau {currentLevelId}...</p>
+            <div className="game-loading">
+                <p className="game-loading-text">Chargement du niveau {currentLevelId}...</p>
             </div>
         );
     }
 
     if (!level) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
-                <div className="text-center">
-                    <p className="text-2xl mb-4">❌ Erreur de chargement</p>
-                    <p className="text-sm">Vérifiez que l'API tourne sur le bon port</p>
+            <div className="game-error">
+                <div className="game-error-container">
+                    <p className="game-error-title">❌ Erreur de chargement</p>
+                    <p className="game-error-subtitle">Vérifiez que l'API tourne sur le bon port</p>
                     <button
                         onClick={() => navigate('/')}
-                        className="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+                        className="game-error-button"
                     >
                         Retour au menu
                     </button>
@@ -432,43 +433,48 @@ function Game() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6">
-            <div className="w-full max-w-7xl">
-                <div className="flex items-center justify-between mb-4">
+        <div className="game-container">
+            <div className="game-content">
+                {/* En-tête avec titre et bouton retour */}
+                <div className="game-header">
                     <button
                         onClick={() => navigate('/')}
-                        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                        className="game-quit-button"
                     >
-                        ← Retour
+                        ← Quitter
                     </button>
 
-                    <div className="flex-1 text-center">
-                        <h1 className="text-2xl md:text-4xl font-bold text-white">
-                            Niveau {level.id} - {level.name} | 👤 {username}
+                    <div className="game-title-section">
+                        <h1 className="game-title">
+                            {level.name}
                         </h1>
+                        <p className="game-subtitle">
+                            Niveau {level.id} • Aventurier : {username}
+                        </p>
                     </div>
 
-                    <div className="w-24"></div>
+                    <div className="game-header-spacer"></div>
                 </div>
 
-                {/* Barre de HP */}
-                <div className="flex justify-center mb-4">
+                {/* Barre de HP redessinée */}
+                <div className="game-hp-container">
                     <HPBar currentHP={playerHP} maxHP={MAX_HP} />
                 </div>
 
-                <div className="flex items-center justify-center gap-6 mb-4">
-                    <div className="bg-blue-900 text-white px-4 py-2 rounded-lg border-2 border-blue-500">
-                        <span className="font-bold">⏱️ {formatTime(timer)}</span>
+                {/* Statistiques */}
+                <div className="game-stats">
+                    <div className="game-stat-timer">
+                        <span>⏱️ {formatTime(timer)}</span>
                     </div>
-                    <div className="bg-purple-900 text-white px-4 py-2 rounded-lg border-2 border-purple-500">
-                        <span className="font-bold">🚶 {moveCount}</span>
+                    <div className="game-stat-moves">
+                        <span>👣 {moveCount}</span>
                     </div>
                 </div>
 
                 {inventory.length > 0 && (
-                    <div className="bg-gradient-to-r from-purple-900 to-indigo-900 text-white px-6 py-3 rounded-xl shadow-lg mb-4 border-2 border-purple-500">
-                        <div className="flex items-center justify-center flex-wrap gap-3">
-                            <span className="font-bold text-lg mr-2">🎒 Inventaire :</span>
+                    <div className="game-inventory">
+                        <div className="game-inventory-content">
+                            <span className="game-inventory-title">🎒 Sac d'Aventurier</span>
                             {inventory.map((item, idx) => {
                                 const itemIcons = {
                                     'key_red': '🔴',
@@ -481,14 +487,14 @@ function Game() {
                                     'axe': '🪓'
                                 };
                                 const itemNames = {
-                                    'key_red': 'Clé rouge',
-                                    'key_blue': 'Clé bleue',
-                                    'water_bucket': 'Seau d\'eau',
+                                    'key_red': 'Clé Rouge',
+                                    'key_blue': 'Clé Bleue',
+                                    'water_bucket': 'Seau d\'Eau',
                                     'pickaxe': 'Pioche',
-                                    'swim_boots': 'Bottes',
+                                    'swim_boots': 'Bottes Magiques',
                                     'dagger': 'Dague',
                                     'sword': 'Épée',
-                                    'axe': 'Hache'
+                                    'axe': 'Hache de Guerre'
                                 };
                                 const icon = itemIcons[item] || '📦';
                                 const name = itemNames[item] || item;
@@ -496,10 +502,10 @@ function Game() {
                                 return (
                                     <div
                                         key={idx}
-                                        className="bg-gray-800 hover:bg-gray-700 px-3 py-2 rounded-lg border-2 border-purple-400 shadow-md transform hover:scale-105 transition-all flex items-center gap-2"
+                                        className="game-inventory-item"
                                     >
-                                        <span className="text-xl">{icon}</span>
-                                        <span className="text-sm font-medium">{name}</span>
+                                        <span className="game-inventory-item-icon">{icon}</span>
+                                        <span className="game-inventory-item-name">{name}</span>
                                     </div>
                                 );
                             })}
@@ -508,7 +514,7 @@ function Game() {
                 )}
 
                 {/* Toast de notification */}
-                <div className="flex justify-center mb-4 min-h-[60px]">
+                <div className="game-toast-container">
                     <Toast
                         message={toast.message}
                         type={toast.type}
@@ -517,7 +523,7 @@ function Game() {
                     />
                 </div>
 
-                <div className="flex justify-center">
+                <div className="game-grid-container">
                     <Grid
                         level={level}
                         revealed={revealed}
