@@ -203,7 +203,7 @@ function Game() {
       stopChrono();
       console.log(`Niveau ${currentLevelId} terminé !`);
 
-      saveHighScore(username, currentLevelId, time);
+      saveHighScore(username, time, currentLevelId);
 
       setTimeout(() => {
         const nextLevel = currentLevelId + 1;
