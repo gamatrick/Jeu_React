@@ -1,21 +1,21 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Gameover.css';
+import { formatTime } from '../utils/timeFormatter';
+import '../styles/Gameover.css';
 
-/**
- * Composant GameOver - Affiche l'écran de défaite
- * @param {string} username - Nom du joueur
- * @param {number} level - Niveau atteint
- * @param {number} moveCount - Nombre de mouvements
- * @param {number} timeElapsed - Temps écoulé
- */
+// Composant GameOver - Affiche l'écran de défaite
+// Montre les statistiques de la partie terminée et offre des options pour recommencer
 function GameOver({ username, level, moveCount, timeElapsed }) {
     const navigate = useNavigate();
 
-    const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    // Recharge la page pour recommencer une nouvelle partie
+    const handleRestart = () => {
+        window.location.reload();
+    };
+
+    // Navigue vers le menu principal
+    const handleBackToMenu = () => {
+        navigate('/');
     };
 
     return (
@@ -52,14 +52,14 @@ function GameOver({ username, level, moveCount, timeElapsed }) {
 
                     <div className="gameover-buttons">
                         <button
-                            onClick={() => window.location.reload()}
+                            onClick={handleRestart}
                             className="gameover-button gameover-button-restart"
                         >
                             ⚔️ Renaître
                         </button>
 
                         <button
-                            onClick={() => navigate('/')}
+                            onClick={handleBackToMenu}
                             className="gameover-button gameover-button-home"
                         >
                             🏰 Retour au Château
