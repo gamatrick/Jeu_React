@@ -16,6 +16,7 @@ function Game() {
     const [clearedObstacles, setClearedObstacles] = useState([]);
     const [username, setUsername] = useState('');
     const navigate = useNavigate();
+    const [time, setTime] = useState(0);
 
     useEffect(() => {
         const savedUsername = localStorage.getItem('playerUsername');
@@ -87,6 +88,7 @@ function Game() {
         setInventory([]);
         setDefeatedEnemies([]);
         setClearedObstacles([]);
+        startChrono();
 
         fetch(`${API_URL}/levels/${levelId}`)
             .then(res => res.json())
@@ -326,9 +328,10 @@ function Game() {
                         />
                     </div>
                 </div>
+                Time : {time}
             </div>
         </>
     );
-}
+  }
 
 export default Game;

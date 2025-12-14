@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
+import { stopChrono } from './HighScores';
 
 export default function Menu_jeu() {
   const navigate = useNavigate();
-  
+  stopChrono();
+
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6">
       <div className="text-center space-y-8">
@@ -19,7 +21,7 @@ export default function Menu_jeu() {
           </button>
           
           <button 
-            onClick={() => alert('High scores à venir !')}
+            onClick={() => navigate('/highscores')}
             className="px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white text-xl font-semibold rounded-lg transition-colors shadow-lg"
           >
             🏆 High Scores
